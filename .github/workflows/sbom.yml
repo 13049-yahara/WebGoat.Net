@@ -1,24 +1,23 @@
 name: SBOM
-
-on: 
-  workflow_dispatch:
-
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+  
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    name: Checks
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Build
-      run: dotnet build Sample.sln --output buildOutput
-
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
-      with:
-        path: buildOutput
+      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Snapshots
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          format: 'github'
+          output: 'dependency-results.sbom.json'
+          image-ref: '.'
+          github-pat: '<github_pat_token>'
